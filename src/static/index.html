@@ -1,50 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mergington High School Activities</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <header>
-      <h1>Mergington High School</h1>
-      <h2>Extracurricular Activities</h2>
-    </header>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Mergington High — Actividades</title>
+	<style>
+		:root{
+			--bg:#f6f8fa;
+			--card:#ffffff;
+			--accent:#2b7cff;
+			--muted:#6b7280;
+			--shadow: 0 6px 18px rgba(17,24,39,0.08);
+			font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+		}
+		body{ margin:0; background:var(--bg); color:#0f172a; }
+		header{ padding:28px 32px; display:flex; align-items:center; gap:12px; }
+		h1{ margin:0; font-size:20px; }
+		.container{ max-width:1100px; margin:20px auto; padding:0 20px 60px; }
+		.grid{ display:grid; grid-template-columns: repeat(auto-fill,minmax(290px,1fr)); gap:18px; }
+		.card{
+			background:var(--card);
+			padding:18px;
+			border-radius:12px;
+			box-shadow:var(--shadow);
+			border:1px solid rgba(15,23,42,0.03);
+			transition:transform .14s ease, box-shadow .14s ease;
+		}
+		.card:hover{ transform:translateY(-6px); box-shadow:0 14px 30px rgba(15,23,42,0.12); }
+		.card h3{ margin:0 0 6px 0; font-size:16px; color:#07112a; }
+		.meta{ font-size:13px; color:var(--muted); margin-bottom:10px; }
+		.badge{ display:inline-block; background:rgba(43,124,255,0.12); color:var(--accent); padding:4px 8px; border-radius:999px; font-size:12px; margin-right:6px; }
+		.participants{ margin:10px 0 0 0; padding-left:18px; color:#0b1220; }
+		.participants li{ margin:6px 0; font-size:13px; list-style: disc; }
+		.empty{ color:var(--muted); font-style:italic; font-size:13px; }
+		.footer-note{ color:var(--muted); font-size:13px; margin-top:10px; }
+	</style>
+</head>
+<body>
+	<header>
+		<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect rx='6' width='36' height='36' fill='%232b7cff'/></svg>" alt="logo" style="width:36px;height:36px;border-radius:6px;">
+		<h1>Mergington High — Actividades</h1>
+	</header>
 
-    <main>
-      <section id="activities-container">
-        <h3>Available Activities</h3>
-        <div id="activities-list">
-          <!-- Activities will be loaded here -->
-          <p>Loading activities...</p>
-        </div>
-      </section>
+	<main class="container">
+		<p class="footer-note">Cargando actividades…</p>
+		<div id="grid" class="grid" aria-live="polite"></div>
+	</main>
 
-      <section id="signup-container">
-        <h3>Sign Up for an Activity</h3>
-        <form id="signup-form">
-          <div class="form-group">
-            <label for="email">Student Email:</label>
-            <input type="email" id="email" required placeholder="your-email@mergington.edu" />
-          </div>
-          <div class="form-group">
-            <label for="activity">Select Activity:</label>
-            <select id="activity" required>
-              <option value="">-- Select an activity --</option>
-              <!-- Activity options will be loaded here -->
-            </select>
-          </div>
-          <button type="submit">Sign Up</button>
-        </form>
-        <div id="message" class="hidden"></div>
-      </section>
-    </main>
+	<script>
+		async function loadActivities(){
+			const grid = document.getElementById('grid');
+			const note = document.querySelector('.footer-note');
+			try{
+				const res = await fetch('/activities');
+				if(!res.ok) throw new Error('Error cargando actividades');
+				const data = await res.json();
+				grid.innerHTML = '';
+				note.textContent = `Se muestran ${Object.keys(data).length} actividades.`;
+				for(const [name, info] of Object.entries(data)){
+					const card = document.createElement('article');
+					card.className = 'card';
 
-    <footer>
-      <p>&copy; 2023 Mergington High School</p>
-    </footer>
+					const h3 = document.createElement('h3');
+					h3.textContent = name;
+					card.appendChild(h3);
 
-    <script src="app.js"></script>
-  </body>
+					const meta = document.createElement('div');
+					meta.className = 'meta';
+
+					const badge = document.createElement('span');
+					badge.className = 'badge';
+					badge.textContent = `${info.participants.length} / ${info.max_participants}`;
+					meta.appendChild(badge);
+
+					const small = document.createElement('small');
+					small.textContent = info.schedule;
+					meta.appendChild(small);
+
+					card.appendChild(meta);
+
+					const desc = document.createElement('p');
+					desc.style.margin = '0 0 10px 0';
+					desc.style.color = 'var(--muted)';
+					desc.style.fontSize = '14px';
+					desc.textContent = info.description;
+					card.appendChild(desc);
+
+					const strong = document.createElement('strong');
+					strong.textContent = 'Participantes';
+					card.appendChild(strong);
+
+					// Participants list
+					if(Array.isArray(info.participants) && info.participants.length){
+						const ul = document.createElement('ul');
+						ul.className = 'participants';
+						for(const p of info.participants){
+							const li = document.createElement('li');
+							li.textContent = p;
+							ul.appendChild(li);
+						}
+						card.appendChild(ul);
+					} else {
+						const empty = document.createElement('div');
+						empty.className = 'empty';
+						empty.textContent = 'No hay participantes aún.';
+						card.appendChild(empty);
+					}
+					grid.appendChild(card);
+				}
+			}catch(err){
+				note.textContent = 'No se pudieron cargar las actividades.';
+				console.error(err);
+			}
+		}
+
+		// Simple HTML escaper for injected text
+		function escapeHtml(s){
+			return String(s)
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;');
+		}
+
+		// Inicializar
+		loadActivities();
+	</script>
+</body>
 </html>
