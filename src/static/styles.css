@@ -174,6 +174,7 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  list-style: none;
 }
 
 .participants-list li {
@@ -182,15 +183,34 @@ footer {
   border-radius: 4px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   transition: transform 0.1s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .participants-list li:hover {
   transform: translateX(4px);
 }
 
-.participants-list li:before {
+.participants-list li span:first-child::before {
   content: "📧";
   margin-right: 8px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 16px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  background: none;
 }
 
 .no-participants {
